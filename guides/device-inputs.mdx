@@ -1,9 +1,9 @@
 ---
 title: Device settings
-description: Choose whether a device input creates a clip or a recording.
+description: Choose whether a device input creates a Clip or a Memo.
 ---
 
-The app decides what a recording becomes. Firmware reports the input and supplies
+The app decides whether a recording becomes a Clip or a Memo. Firmware reports the input and supplies
 audio. The same rule applies to Sudo, Glyph, and Dex.
 
 `GET /devices` returns your account's devices with `id`, `name`, and `model`.
@@ -15,16 +15,16 @@ Sudo uses the existing model identifier `ring`. Use the returned device ID with
   "settings": {
     "inputs": {
       "hold": "clip",
-      "doubleTap": "recording",
-      "tripleTap": "recording",
-      "appRecord": "recording"
+      "doubleTap": "memo",
+      "tripleTap": "memo",
+      "appRecord": "memo"
     }
   }
 }
 ```
 
 Only the inputs supported by that device are returned. Each value is `clip` or
-`recording`. Sudo's double-tap and triple-tap choices are independent.
+`memo`. Sudo's double-tap and triple-tap choices are independent.
 
 | Device | Supported inputs |
 | --- | --- |
@@ -47,7 +47,7 @@ Content-Type: application/json
 ```
 
 Hold defaults to clip. Double tap, triple tap, record-button, and app-started
-inputs default to recording. Choose only the inputs returned for your device.
+inputs default to Memo. Choose only the inputs returned for your device.
 
 Settings sync across the account. Offline phones pick them up when they sync.
 Changes apply to future captures; existing recordings keep their type.

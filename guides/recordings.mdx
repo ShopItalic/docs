@@ -1,7 +1,22 @@
 ---
 title: Recordings
-description: One recording object for creating, reading, and editing library items.
+description: Recordings are audio inputs transformed into Clips or Memos.
 ---
+
+## From recording to Clip or Memo
+
+A **recording** is the common audio input. The app processes it into a **Clip**
+or a **Memo**, using the selected input mapping:
+
+| Result | Intended use | What remains |
+| --- | --- | --- |
+| Clip (`clip`) | Short bursts, commands, quick notes | Text only; audio is deleted immediately after conversion |
+| Memo (`memo`) | Longer recordings and notes | Text plus audio stored locally |
+
+Text syncs to the cloud for both. The API does not store audio. Duration is an
+intended use, not an automatic classification rule. Recording is the shared
+resource name and the database table remains `recordings`. Each row has the
+result type `clip` or `memo`; Memo is not renamed to Recording.
 
 ## The recording object
 
@@ -11,7 +26,7 @@ Create, read, and edit responses use the same `recording` object:
 {
   "recording": {
     "id": "C5A80766-9674-4EE2-B238-63AC6DD51495",
-    "type": "recording",
+    "type": "memo",
     "title": "Planning",
     "transcript": "Discuss the next release.",
     "summary": "",
@@ -25,7 +40,7 @@ Create, read, and edit responses use the same `recording` object:
 }
 ```
 
-`type` is `clip` or `recording`. A device capture can include `deviceId`.
+`type` is `clip` or `memo`. A device capture can include `deviceId`.
 An import can include an optional `externalId` from your own system.
 Timestamps are Unix milliseconds.
 
@@ -81,11 +96,11 @@ it may still be processing. Pagination reflects current data, not a frozen snaps
 
 ## Local audio
 
-For `type: "recording"`, creation may include local file references:
+For `type: "memo"`, creation may include local file references:
 
 ```json
 {
-  "type": "recording",
+  "type": "memo",
   "transcript": "Meeting notes.",
   "audio": [{"clientId":"my-phone","fileId":"audio-123"}]
 }
@@ -98,9 +113,10 @@ offline client's file is still present. Italic cannot play or remove that local
 file through this API.
 
 Clips always return `audio: []` and cannot be created with audio references.
-The app retains recovery audio until transcription and text saving succeed,
-then deletes it. A failed transcription does not authorize deleting the source.
-Client transfer and cleanup reports remain part of the compatibility protocol.
+Audio used during capture and transcription is an in-progress recording input,
+not retained Clip audio. Once converted and saved as a Clip, only text remains.
+A pending or failed input is not a completed Clip. Client transfer and cleanup
+reports remain part of the app protocol.
 
 ## Errors
 

@@ -1,14 +1,18 @@
 ---
 title: Italic
-description: Create and work with recordings. Text syncs to Italic; audio stays local.
+description: Transform recordings into text-only Clips or Memos with local audio.
 ---
 
-A recording is one item in your Italic library. Its `type` is:
+A **recording** is an audio input. The app transforms it into one of two types:
 
-- **`clip`** — text only after transcription. The app deletes the audio once the text is safely saved.
-- **`recording`** — text with optional audio kept on the originating client.
+- **Clip** (`clip`) — a short burst, command, or quick note. Only text is saved; the audio is deleted immediately after conversion to text.
+- **Memo** (`memo`) — a longer recording or note. Both text and audio are saved, with the audio kept locally.
 
-The API reads and writes the same library as the app. It never stores audio.
+Text syncs to the cloud. Memo audio stays on the client that holds it; the API
+can reference local file IDs without storing the audio. “Recording” is the
+shared input and API resource, not a third type or another name for Memo.
+The app's selected input mapping determines the result, not the firmware or a
+duration threshold.
 
 Base URL: `https://app.italic.com/api/v2`.
 
@@ -22,7 +26,7 @@ curl https://app.italic.com/api/v2/recordings \
   -H "Authorization: Bearer $ITALIC_API_KEY" \
   -H 'Content-Type: application/json' \
   -H 'Idempotency-Key: meeting-123' \
-  --data '{"type":"recording","title":"Planning","transcript":"Discuss the next release."}'
+  --data '{"type":"memo","title":"Planning","transcript":"Discuss the next release."}'
 ```
 
 Only `type` is required in the body. Italic supplies an ID and timestamp.

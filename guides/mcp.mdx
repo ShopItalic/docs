@@ -12,9 +12,9 @@ https://app.italic.com/api/v1/mcp
 Choose **Sign in** in your MCP client. Italic opens a browser consent page where
 you choose permissions. OAuth uses authorization codes with S256 PKCE, rotating
 refresh tokens, revocation, and dynamic client registration. The MCP server and
-webhooks expose text only; they do not upload or deliver audio. Clips delete
-local audio after successful processing and a safe text save. Recordings retain
-audio locally. Italic does not start or manage a Codex or Claude task.
+webhooks expose text only; they do not upload or deliver audio. Clips keep only
+text; audio is deleted immediately after conversion to text. Memos retain
+audio locally alongside their text. Italic does not start or manage a Codex or Claude task.
 
 For Codex CLI:
 
@@ -65,8 +65,8 @@ server instructions.
 ## Recording fields
 
 MCP uses the existing v1 recording format. `kind: "clip"` means a text-only Clip;
-`kind: "memo"` is the compatibility name for a Recording. The public REST v2 API
-calls these `type: "clip"` and `type: "recording"`. They refer to the same library.
+`kind: "memo"` means a Memo. The public REST v2 API
+calls these `type: "clip"` and `type: "memo"`. They refer to the same library.
 MCP returns text under `content`, alongside `id`, `revision`, `updatedAt`, and
 `processing`. It never returns audio or local file references.
 
