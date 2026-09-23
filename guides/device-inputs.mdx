@@ -15,7 +15,8 @@ Sudo uses the existing model identifier `ring`. Use the returned device ID with
   "settings": {
     "inputs": {
       "hold": "clip",
-      "recordButton": "recording",
+      "doubleTap": "recording",
+      "tripleTap": "recording",
       "appRecord": "recording"
     }
   }
@@ -23,8 +24,15 @@ Sudo uses the existing model identifier `ring`. Use the returned device ID with
 ```
 
 Only the inputs supported by that device are returned. Each value is `clip` or
-`recording`. `recordButton` is the device's identifiable latched recording input;
-when offline files share that input, their gestures share this setting.
+`recording`. Sudo's double-tap and triple-tap choices are independent.
+
+| Device | Supported inputs |
+| --- | --- |
+| Sudo (`ring`) | `hold`, `doubleTap`, `tripleTap`, `appRecord` |
+| Glyph | `recordButton`, `appRecord` |
+| Dex | `recordButton`, `appRecord` |
+
+`recordButton` means a physical record button and is not accepted for Sudo.
 `appRecord` means recording started from the app.
 
 To change a choice, copy the GET response's `ETag` into `If-Match` and send the
@@ -35,12 +43,11 @@ PATCH /api/v2/devices/device-id/settings
 If-Match: "etag-from-get"
 Content-Type: application/json
 
-{"inputs":{"recordButton":"clip"}}
+{"inputs":{"tripleTap":"clip"}}
 ```
 
-Hold defaults to clip. Record-button and app-started inputs default to recording.
-The current adapters expose hold on Sudo and record-button/app inputs on Sudo,
-Glyph, and Dex. Choose only the inputs returned for your device.
+Hold defaults to clip. Double tap, triple tap, record-button, and app-started
+inputs default to recording. Choose only the inputs returned for your device.
 
 Settings sync across the account. Offline phones pick them up when they sync.
 Changes apply to future captures; existing recordings keep their type.
