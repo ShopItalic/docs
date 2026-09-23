@@ -2,190 +2,58 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Italic API",
-    "version": "1.0.0",
-    "description": "One account recording library. Text and metadata sync; audio stays local. Clip audio is temporary until successful transcription; Memo audio remains on its originating client."
+    "version": "2.0.0",
+    "description": "Recordings, devices, and notifications. Text syncs to Italic; audio stays on the client."
   },
   "servers": [
     {
-      "url": "https://app.italic.com/api/v1"
+      "url": "https://app.italic.com/api/v2"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Recordings"
+    },
+    {
+      "name": "Devices"
+    },
+    {
+      "name": "API keys"
+    },
+    {
+      "name": "Webhooks"
+    },
+    {
+      "name": "Events"
     }
   ],
   "paths": {
-    "/devices": {
-      "get": {
-        "operationId": "listDevices",
-        "summary": "List account devices without pairing credentials",
-        "tags": [
-          "devices"
-        ],
-        "parameters": [],
-        "description": "Required token scope: settings:read. Signed-in Italic sessions are also accepted.",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DevicesResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/recordings": {
       "get": {
         "operationId": "listRecordings",
-        "summary": "Search and list recordings",
+        "summary": "List recordings",
         "tags": [
-          "recordings"
+          "Recordings"
         ],
         "parameters": [
           {
-            "name": "kind",
+            "name": "type",
             "in": "query",
             "schema": {
               "type": "string",
               "enum": [
                 "clip",
-                "memo"
+                "recording"
               ]
             }
           },
           {
-            "name": "source",
+            "name": "q",
             "in": "query",
             "schema": {
               "type": "string",
-              "minLength": 1,
-              "maxLength": 256,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+              "minLength": 0,
+              "maxLength": 200
             }
           },
           {
@@ -213,23 +81,13 @@
             }
           },
           {
-            "name": "q",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "minLength": 0,
-              "maxLength": 200
-            }
-          },
-          {
             "name": "from",
             "in": "query",
             "schema": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
-            },
-            "description": "Inclusive capture time in Unix milliseconds."
+            }
           },
           {
             "name": "to",
@@ -238,8 +96,7 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
-            },
-            "description": "Inclusive capture time in Unix milliseconds."
+            }
           },
           {
             "name": "cursor",
@@ -260,135 +117,33 @@
             }
           }
         ],
-        "description": "Required token scope: recordings:read. Signed-in Italic sessions are also accepted.",
+        "description": "Required permission: recordings:read.",
         "security": [
           {
-            "bearerAuth": []
+            "apiKey": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecordingsResponse"
+                  "$ref": "#/components/schemas/RecordingList"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -401,9 +156,9 @@
       },
       "post": {
         "operationId": "createRecording",
-        "summary": "Import a recording",
+        "summary": "Create a recording",
         "tags": [
-          "recordings"
+          "Recordings"
         ],
         "parameters": [
           {
@@ -414,13 +169,14 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 128
-            }
+            },
+            "description": "Reuse the same key and body when retrying a create request."
           }
         ],
-        "description": "Required token scope: recordings:create. Signed-in Italic sessions are also accepted.",
+        "description": "Required permission: recordings:create.",
         "security": [
           {
-            "bearerAuth": []
+            "apiKey": []
           }
         ],
         "requestBody": {
@@ -435,325 +191,31 @@
         },
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
-            "content": {
-              "application/json": {
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
                 "schema": {
-                  "$ref": "#/components/schemas/ImportResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              },
+              "ETag": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
+                  "type": "string"
+                },
+                "description": "Use as If-Match for the next edit."
               }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/recordings/latest-clip": {
-      "get": {
-        "operationId": "latestClip",
-        "summary": "Get the latest Clip, including pending captures",
-        "tags": [
-          "recordings"
-        ],
-        "parameters": [
-          {
-            "name": "source",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 256,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
-            }
-          },
-          {
-            "name": "deviceId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 256,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
-            }
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "minLength": 0,
-              "maxLength": 200
-            }
-          },
-          {
-            "name": "from",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
             },
-            "description": "Inclusive capture time in Unix milliseconds."
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
-            },
-            "description": "Inclusive capture time in Unix milliseconds."
-          }
-        ],
-        "description": "Required token scope: recordings:read. Signed-in Italic sessions are also accepted.",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecordingsResponse"
+                  "$ref": "#/components/schemas/RecordingResult"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -768,9 +230,9 @@
     "/recordings/{id}": {
       "get": {
         "operationId": "getRecording",
-        "summary": "Get a recording with processing and local audio metadata",
+        "summary": "Get a recording",
         "tags": [
-          "recordings"
+          "Recordings"
         ],
         "parameters": [
           {
@@ -785,135 +247,39 @@
             }
           }
         ],
-        "description": "Required token scope: recordings:read. Signed-in Italic sessions are also accepted.",
+        "description": "Required permission: recordings:read.",
         "security": [
           {
-            "bearerAuth": []
+            "apiKey": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Use as If-Match for the next edit."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecordingResponse"
+                  "$ref": "#/components/schemas/RecordingResult"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -924,11 +290,11 @@
           }
         }
       },
-      "put": {
-        "operationId": "updateRecording",
-        "summary": "Update recording text with an If-Match revision",
+      "patch": {
+        "operationId": "editRecording",
+        "summary": "Edit a recording",
         "tags": [
-          "recordings"
+          "Recordings"
         ],
         "parameters": [
           {
@@ -947,15 +313,17 @@
             "in": "header",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 100
             },
-            "example": "\"1\""
+            "description": "ETag from the last GET response. Prevents overwriting a newer edit."
           }
         ],
-        "description": "Required token scope: recordings:write. Signed-in Italic sessions are also accepted.",
+        "description": "Required permission: recordings:write.",
         "security": [
           {
-            "bearerAuth": []
+            "apiKey": []
           }
         ],
         "requestBody": {
@@ -963,134 +331,38 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateRecording"
+                "$ref": "#/components/schemas/EditRecording"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Use as If-Match for the next edit."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WriteRecordingResponse"
+                  "$ref": "#/components/schemas/RecordingResult"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1103,9 +375,9 @@
       },
       "delete": {
         "operationId": "deleteRecording",
-        "summary": "Delete a recording with an If-Match revision",
+        "summary": "Delete a recording",
         "tags": [
-          "recordings"
+          "Recordings"
         ],
         "parameters": [
           {
@@ -1124,140 +396,40 @@
             "in": "header",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 100
             },
-            "example": "\"1\""
+            "description": "ETag from the last GET response. Prevents overwriting a newer edit."
           }
         ],
-        "description": "Required token scope: recordings:delete. Signed-in Italic sessions are also accepted.",
+        "description": "Required permission: recordings:delete.",
         "security": [
           {
-            "bearerAuth": []
+            "apiKey": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DeleteRecordingResponse"
+                  "$ref": "#/components/schemas/Deleted"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1269,12 +441,58 @@
         }
       }
     },
-    "/recordings/{id}/processing": {
-      "put": {
-        "operationId": "putProcessing",
-        "summary": "Report client processing state",
+    "/devices": {
+      "get": {
+        "operationId": "listDevices",
+        "summary": "List devices",
         "tags": [
-          "recordings"
+          "Devices"
+        ],
+        "parameters": [],
+        "description": "Required permission: settings:read.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceList"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices/{id}/settings": {
+      "get": {
+        "operationId": "getDeviceSettings",
+        "summary": "Get device settings",
+        "tags": [
+          "Devices"
         ],
         "parameters": [
           {
@@ -1289,145 +507,39 @@
             }
           }
         ],
-        "description": "Required token scope: recordings:write. Signed-in Italic sessions are also accepted. Integrations may report metadata only for recordings imported by their application.",
+        "description": "Required permission: settings:read.",
         "security": [
           {
-            "bearerAuth": []
+            "apiKey": []
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Processing"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Use as If-Match for the next edit."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProcessingResponse"
+                  "$ref": "#/components/schemas/SettingsResult"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1437,14 +549,12 @@
             }
           }
         }
-      }
-    },
-    "/recordings/{id}/audio-assets": {
-      "put": {
-        "operationId": "putAudioAsset",
-        "summary": "Report a local audio reference",
+      },
+      "patch": {
+        "operationId": "editDeviceSettings",
+        "summary": "Update device settings",
         "tags": [
-          "recordings"
+          "Devices"
         ],
         "parameters": [
           {
@@ -1457,12 +567,23 @@
               "maxLength": 256,
               "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
             }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 100
+            },
+            "description": "ETag from the last GET response. Prevents overwriting a newer edit."
           }
         ],
-        "description": "Required token scope: recordings:write. Signed-in Italic sessions are also accepted. Integrations may report metadata only for recordings imported by their application.",
+        "description": "Required permission: settings:write.",
         "security": [
           {
-            "bearerAuth": []
+            "apiKey": []
           }
         ],
         "requestBody": {
@@ -1470,134 +591,38 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AudioAsset"
+                "$ref": "#/components/schemas/DeviceSettings"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Use as If-Match for the next edit."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AssetResponse"
+                  "$ref": "#/components/schemas/SettingsResult"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1609,143 +634,41 @@
         }
       }
     },
-    "/input-mappings": {
+    "/api-keys": {
       "get": {
-        "operationId": "getInputMappings",
-        "summary": "Read app input mapping history",
+        "operationId": "listKeys",
+        "summary": "List API keys",
         "tags": [
-          "input-mappings"
+          "API keys"
         ],
         "parameters": [],
-        "description": "Required token scope: settings:read. Signed-in Italic sessions are also accepted.",
+        "description": "Manage this in Settings → Integrations, or use a signed-in Italic account session. API keys cannot manage credentials or webhook destinations.",
         "security": [
           {
-            "bearerAuth": []
+            "accountSession": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MappingsResponse"
+                  "$ref": "#/components/schemas/KeyList"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1757,16 +680,16 @@
         }
       },
       "post": {
-        "operationId": "putInputMappings",
-        "summary": "Merge immutable app input mapping revisions",
+        "operationId": "createKey",
+        "summary": "Create an API key",
         "tags": [
-          "input-mappings"
+          "API keys"
         ],
         "parameters": [],
-        "description": "Required token scope: settings:write. Signed-in Italic sessions are also accepted.",
+        "description": "Manage this in Settings → Integrations, or use a signed-in Italic account session. API keys cannot manage credentials or webhook destinations.",
         "security": [
           {
-            "bearerAuth": []
+            "accountSession": []
           }
         ],
         "requestBody": {
@@ -1774,134 +697,32 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/InputRevisions"
+                "$ref": "#/components/schemas/CreateKey"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MappingsResponse"
+                  "$ref": "#/components/schemas/KeyResult"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1913,481 +734,12 @@
         }
       }
     },
-    "/events": {
-      "get": {
-        "operationId": "listEvents",
-        "summary": "Read recording events after a cursor",
-        "tags": [
-          "events"
-        ],
-        "parameters": [
-          {
-            "name": "after",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 0
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
-        ],
-        "description": "Required token scope: events:read. Signed-in Italic sessions are also accepted.",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EventsResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/tokens": {
-      "get": {
-        "operationId": "listTokens",
-        "summary": "List integration tokens without secrets",
-        "tags": [
-          "tokens"
-        ],
-        "parameters": [],
-        "description": "Requires a signed-in Italic session. Integration tokens cannot call this operation.",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokensResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "createToken",
-        "summary": "Create a scoped token; secret returned once",
-        "tags": [
-          "tokens"
-        ],
-        "parameters": [],
-        "description": "Requires a signed-in Italic session. Integration tokens cannot call this operation.",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateToken"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateTokenResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/tokens/{id}": {
+    "/api-keys/{id}": {
       "delete": {
-        "operationId": "revokeToken",
-        "summary": "Revoke an integration token",
+        "operationId": "deleteKey",
+        "summary": "Revoke an API key",
         "tags": [
-          "tokens"
+          "API keys"
         ],
         "parameters": [
           {
@@ -2402,135 +754,33 @@
             }
           }
         ],
-        "description": "Requires a signed-in Italic session. Integration tokens cannot call this operation.",
+        "description": "Manage this in Settings → Integrations, or use a signed-in Italic account session. API keys cannot manage credentials or webhook destinations.",
         "security": [
           {
-            "bearerAuth": []
+            "accountSession": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RevokeTokenResponse"
+                  "$ref": "#/components/schemas/Deleted"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2545,140 +795,38 @@
     "/webhooks": {
       "get": {
         "operationId": "listWebhooks",
-        "summary": "List webhook subscriptions",
+        "summary": "List webhooks",
         "tags": [
-          "webhooks"
+          "Webhooks"
         ],
         "parameters": [],
-        "description": "Requires a signed-in Italic session. Integration tokens cannot call this operation.",
+        "description": "Manage this in Settings → Integrations, or use a signed-in Italic account session. API keys cannot manage credentials or webhook destinations.",
         "security": [
           {
-            "bearerAuth": []
+            "accountSession": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WebhooksResponse"
+                  "$ref": "#/components/schemas/WebhookList"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2691,15 +839,15 @@
       },
       "post": {
         "operationId": "createWebhook",
-        "summary": "Create a signed webhook subscription",
+        "summary": "Create a webhook",
         "tags": [
-          "webhooks"
+          "Webhooks"
         ],
         "parameters": [],
-        "description": "Requires a signed-in Italic session. Integration tokens cannot call this operation.",
+        "description": "Manage this in Settings → Integrations, or use a signed-in Italic account session. API keys cannot manage credentials or webhook destinations.",
         "security": [
           {
-            "bearerAuth": []
+            "accountSession": []
           }
         ],
         "requestBody": {
@@ -2707,134 +855,32 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Webhook"
+                "$ref": "#/components/schemas/CreateWebhook"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateWebhookResponse"
+                  "$ref": "#/components/schemas/WebhookResult"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2848,10 +894,10 @@
     },
     "/webhooks/{id}": {
       "delete": {
-        "operationId": "disableWebhook",
-        "summary": "Disable a webhook and cancel pending deliveries",
+        "operationId": "deleteWebhook",
+        "summary": "Delete a webhook",
         "tags": [
-          "webhooks"
+          "Webhooks"
         ],
         "parameters": [
           {
@@ -2866,45 +912,33 @@
             }
           }
         ],
-        "description": "Requires a signed-in Italic session. Integration tokens cannot call this operation.",
+        "description": "Manage this in Settings → Integrations, or use a signed-in Italic account session. API keys cannot manage credentials or webhook destinations.",
         "security": [
           {
-            "bearerAuth": []
+            "accountSession": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response. Integration imports without recordings:read return only id and revision.",
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DisableWebhookResponse"
+                  "$ref": "#/components/schemas/Deleted"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid request or filter.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid, revoked or expired credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope, different importing application, or session required.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2912,89 +946,65 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "operationId": "listEvents",
+        "summary": "List events",
+        "tags": [
+          "Events"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 32
+            },
+            "description": "Continue from nextCursor returned by the previous request. Omit to start at the beginning."
           },
-          "404": {
-            "description": "Resource not found.",
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "description": "Required permission: events:read.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. Writes without read permission return an ID and revision only.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Request identifier for troubleshooting."
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/EventList"
                 }
               }
             }
           },
-          "409": {
-            "description": "Revision, immutable metadata or idempotency conflict.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "410": {
-            "description": "Recording deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "412": {
-            "description": "If-Match revision no longer matches.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Request too large.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "428": {
-            "description": "If-Match required.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited; retry after Retry-After seconds.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected failure.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service unavailable.",
+          "default": {
+            "description": "Request failed. Errors include a stable code and a readable message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3009,153 +1019,27 @@
   },
   "components": {
     "securitySchemes": {
-      "bearerAuth": {
+      "apiKey": {
         "type": "http",
-        "scheme": "bearer"
+        "scheme": "bearer",
+        "description": "An API key from Settings → Integrations."
+      },
+      "accountSession": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "A signed-in Italic account session. An API key cannot manage access."
       }
     },
     "schemas": {
-      "UpdateRecording": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "object",
-            "properties": {
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "clip",
-                  "memo"
-                ]
-              },
-              "title": {
-                "type": "string",
-                "minLength": 0,
-                "maxLength": 200
-              },
-              "transcript": {
-                "type": "string",
-                "minLength": 0,
-                "maxLength": 1000000
-              },
-              "summary": {
-                "type": "string",
-                "minLength": 0,
-                "maxLength": 1000000
-              },
-              "recordedAt": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991
-              },
-              "isPinned": {
-                "type": "boolean"
-              },
-              "recordingSource": {
-                "type": "string",
-                "enum": [
-                  "phone",
-                  "sudo",
-                  "glyph",
-                  "dex",
-                  "ring",
-                  "pocket"
-                ]
-              },
-              "recordingDevice": {
-                "type": "object",
-                "properties": {
-                  "typeId": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 256,
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
-                  },
-                  "deviceId": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 256,
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
-                  },
-                  "modelId": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 128
-                  },
-                  "hardwareRevision": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 128
-                  }
-                },
-                "required": [
-                  "typeId",
-                  "deviceId"
-                ],
-                "additionalProperties": false
-              },
-              "location": {
-                "type": "object",
-                "properties": {
-                  "latitude": {
-                    "type": "number",
-                    "minimum": -90,
-                    "maximum": 90
-                  },
-                  "longitude": {
-                    "type": "number",
-                    "minimum": -180,
-                    "maximum": 180
-                  },
-                  "label": {
-                    "type": "string",
-                    "minLength": 0,
-                    "maxLength": 200
-                  }
-                },
-                "required": [
-                  "latitude",
-                  "longitude"
-                ],
-                "additionalProperties": false
-              }
-            },
-            "required": [
-              "kind",
-              "title",
-              "transcript",
-              "summary",
-              "recordedAt",
-              "isPinned"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "required": [
-          "content"
-        ],
-        "additionalProperties": false
-      },
       "CreateRecording": {
         "type": "object",
         "properties": {
-          "kind": {
+          "type": {
             "type": "string",
             "enum": [
               "clip",
-              "memo"
+              "recording"
             ]
-          },
-          "externalId": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 256,
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
-          },
-          "recordedAt": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
           },
           "title": {
             "type": "string",
@@ -3171,28 +1055,140 @@
             "type": "string",
             "minLength": 0,
             "maxLength": 1000000
+          },
+          "recordedAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "externalId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+          },
+          "audio": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "clientId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                },
+                "fileId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                }
+              },
+              "required": [
+                "clientId",
+                "fileId"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 20
           }
         },
         "required": [
-          "kind",
-          "externalId",
-          "recordedAt"
+          "type"
         ],
         "additionalProperties": false
       },
-      "CreateToken": {
+      "EditRecording": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 200
+          },
+          "transcript": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 1000000
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 1000000
+          },
+          "pinned": {
+            "type": "boolean"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "DeviceSettings": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "object",
+            "properties": {
+              "hold": {
+                "type": "string",
+                "enum": [
+                  "clip",
+                  "recording"
+                ]
+              },
+              "doubleTap": {
+                "type": "string",
+                "enum": [
+                  "clip",
+                  "recording"
+                ]
+              },
+              "tripleTap": {
+                "type": "string",
+                "enum": [
+                  "clip",
+                  "recording"
+                ]
+              },
+              "recordButton": {
+                "type": "string",
+                "enum": [
+                  "clip",
+                  "recording"
+                ]
+              },
+              "pushToTalk": {
+                "type": "string",
+                "enum": [
+                  "clip",
+                  "recording"
+                ]
+              },
+              "appRecord": {
+                "type": "string",
+                "enum": [
+                  "clip",
+                  "recording"
+                ]
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "inputs"
+        ],
+        "additionalProperties": false
+      },
+      "CreateKey": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
             "minLength": 1,
             "maxLength": 80
-          },
-          "applicationId": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 256,
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
           },
           "scopes": {
             "type": "array",
@@ -3219,23 +1215,80 @@
         },
         "required": [
           "name",
-          "applicationId",
-          "scopes",
-          "expiresInDays"
+          "scopes"
         ],
         "additionalProperties": false
       },
-      "Processing": {
+      "CreateWebhook": {
         "type": "object",
         "properties": {
-          "kind": {
+          "url": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "events": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "enum": [
+                "recording.created",
+                "recording.updated",
+                "recording.deleted"
+              ]
+            }
+          }
+        },
+        "required": [
+          "url",
+          "events"
+        ],
+        "additionalProperties": false
+      },
+      "Recording": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+          },
+          "type": {
             "type": "string",
             "enum": [
               "clip",
-              "memo"
+              "recording"
             ]
           },
+          "title": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 200
+          },
+          "transcript": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 1000000
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 1000000
+          },
           "recordedAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "updatedAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "revision": {
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991
@@ -3250,95 +1303,33 @@
               "failed"
             ]
           },
-          "expectedRevision": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
+          "pinned": {
+            "type": "boolean"
           },
-          "captureInput": {
-            "type": "string",
-            "enum": [
-              "hold",
-              "doubleTap",
-              "tripleTap",
-              "recordButton",
-              "pushToTalk",
-              "appRecord"
-            ]
-          },
-          "mappingRevision": {
-            "type": "string",
-            "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$"
-          },
-          "language": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 40
-          },
-          "durationMs": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "kind",
-          "recordedAt",
-          "status",
-          "expectedRevision"
-        ],
-        "additionalProperties": false
-      },
-      "AudioAsset": {
-        "type": "object",
-        "properties": {
-          "clientId": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 256,
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
-          },
-          "assetId": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 256,
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
-          },
-          "clientName": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 80
-          },
-          "state": {
-            "type": "string",
-            "enum": [
-              "available",
-              "pending_deletion",
-              "missing",
-              "deleted"
-            ]
-          },
-          "expectedRevision": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "clientId",
-          "assetId",
-          "clientName",
-          "state",
-          "expectedRevision"
-        ],
-        "additionalProperties": false
-      },
-      "InputRevision": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$"
+          "audio": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "clientId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                },
+                "fileId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                }
+              },
+              "required": [
+                "clientId",
+                "fileId"
+              ],
+              "additionalProperties": false
+            }
           },
           "deviceId": {
             "type": "string",
@@ -3346,418 +1337,32 @@
             "maxLength": 256,
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
           },
-          "input": {
-            "type": "string",
-            "enum": [
-              "hold",
-              "doubleTap",
-              "tripleTap",
-              "recordButton",
-              "pushToTalk",
-              "appRecord"
-            ]
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "clip",
-              "memo"
-            ]
-          },
-          "effectiveAt": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "id",
-          "deviceId",
-          "input",
-          "kind",
-          "effectiveAt"
-        ],
-        "additionalProperties": false
-      },
-      "Webhook": {
-        "type": "object",
-        "properties": {
-          "url": {
+          "externalId": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2048
-          },
-          "events": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "recording.created",
-                "recording.updated",
-                "recording.transcript_ready",
-                "recording.deleted"
-              ]
-            },
-            "minItems": 1,
-            "maxItems": 4
-          }
-        },
-        "required": [
-          "url",
-          "events"
-        ],
-        "additionalProperties": false
-      },
-      "InputRevisions": {
-        "type": "object",
-        "properties": {
-          "revisions": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$"
-                },
-                "deviceId": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 256,
-                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
-                },
-                "input": {
-                  "type": "string",
-                  "enum": [
-                    "hold",
-                    "doubleTap",
-                    "tripleTap",
-                    "recordButton",
-                    "pushToTalk",
-                    "appRecord"
-                  ]
-                },
-                "kind": {
-                  "type": "string",
-                  "enum": [
-                    "clip",
-                    "memo"
-                  ]
-                },
-                "effectiveAt": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 9007199254740991
-                }
-              },
-              "required": [
-                "id",
-                "deviceId",
-                "input",
-                "kind",
-                "effectiveAt"
-              ],
-              "additionalProperties": false
-            },
-            "maxItems": 200
-          }
-        },
-        "required": [
-          "revisions"
-        ],
-        "additionalProperties": false
-      },
-      "Recording": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "revision": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "updatedAt": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "content": {
-            "type": "object",
-            "properties": {
-              "kind": {
-                "enum": [
-                  "clip",
-                  "memo"
-                ]
-              },
-              "title": {
-                "type": "string"
-              },
-              "transcript": {
-                "type": "string"
-              },
-              "summary": {
-                "type": "string"
-              },
-              "recordedAt": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "isPinned": {
-                "type": "boolean"
-              },
-              "updatedAt": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "recordingSource": {
-                "type": "string"
-              },
-              "recordingDevice": {
-                "type": "object",
-                "properties": {
-                  "typeId": {
-                    "type": "string"
-                  },
-                  "deviceId": {
-                    "type": "string"
-                  },
-                  "modelId": {
-                    "type": "string"
-                  },
-                  "hardwareRevision": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "typeId",
-                  "deviceId"
-                ]
-              },
-              "location": {
-                "type": "object",
-                "properties": {
-                  "latitude": {
-                    "type": "number"
-                  },
-                  "longitude": {
-                    "type": "number"
-                  },
-                  "label": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "latitude",
-                  "longitude"
-                ]
-              }
-            },
-            "required": [
-              "kind",
-              "title",
-              "transcript",
-              "summary",
-              "recordedAt",
-              "isPinned"
-            ]
-          },
-          "processing": {
-            "type": "object",
-            "properties": {
-              "status": {
-                "enum": [
-                  "pending",
-                  "transcribing",
-                  "ready",
-                  "no_speech",
-                  "failed"
-                ]
-              },
-              "revision": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "kind": {
-                "enum": [
-                  "clip",
-                  "memo"
-                ]
-              },
-              "recordedAt": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "captureInput": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "mappingRevision": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "language": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "durationMs": {
-                "anyOf": [
-                  {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "updatedAt": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": [
-              "status",
-              "revision"
-            ]
-          },
-          "source": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "applicationId": {
-                    "type": "string"
-                  },
-                  "externalId": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "applicationId",
-                  "externalId"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "audio": {
-            "type": "object",
-            "properties": {
-              "retention": {
-                "enum": [
-                  "delete_after_transcription",
-                  "local"
-                ]
-              },
-              "assets": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "clientId": {
-                      "type": "string"
-                    },
-                    "assetId": {
-                      "type": "string"
-                    },
-                    "clientName": {
-                      "type": "string"
-                    },
-                    "state": {
-                      "enum": [
-                        "available",
-                        "pending_deletion",
-                        "missing",
-                        "deleted"
-                      ]
-                    },
-                    "revision": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "reportedAt": {
-                      "type": "integer",
-                      "minimum": 0
-                    }
-                  },
-                  "required": [
-                    "clientId",
-                    "assetId",
-                    "clientName",
-                    "state",
-                    "revision",
-                    "reportedAt"
-                  ]
-                }
-              }
-            },
-            "required": [
-              "retention",
-              "assets"
-            ]
+            "maxLength": 256,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
           }
         },
         "required": [
           "id",
-          "revision",
+          "type",
+          "title",
+          "transcript",
+          "summary",
+          "recordedAt",
           "updatedAt",
-          "content",
-          "processing",
-          "source",
+          "revision",
+          "status",
+          "pinned",
           "audio"
         ]
       },
-      "RecordingResponse": {
+      "RecordingResult": {
         "type": "object",
         "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
           "recording": {
-            "$ref": "#/components/schemas/Recording"
-          }
-        },
-        "required": [
-          "ok",
-          "requestId",
-          "recording"
-        ]
-      },
-      "WriteRecordingResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
-          "recording": {
-            "oneOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/Recording"
               },
@@ -3765,170 +1370,15 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
                   },
                   "revision": {
                     "type": "integer",
-                    "minimum": 0
-                  }
-                },
-                "required": [
-                  "id",
-                  "revision"
-                ],
-                "additionalProperties": false
-              }
-            ]
-          }
-        },
-        "required": [
-          "ok",
-          "requestId",
-          "recording"
-        ]
-      },
-      "ProcessingResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
-          "recording": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/Recording"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string"
-                  },
-                  "revision": {
-                    "type": "integer",
-                    "minimum": 0
-                  }
-                },
-                "required": [
-                  "id",
-                  "revision"
-                ],
-                "additionalProperties": false
-              }
-            ]
-          },
-          "processingRevision": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "required": [
-          "ok",
-          "requestId",
-          "recording",
-          "processingRevision"
-        ]
-      },
-      "DevicesResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
-          "devices": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "typeId": {
-                  "type": "string"
-                },
-                "defaultName": {
-                  "type": "string"
-                },
-                "customName": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "hardwareId": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "revision": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "deleted": {
-                  "type": "boolean"
-                },
-                "updatedAt": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "required": [
-                "id",
-                "typeId",
-                "defaultName",
-                "customName",
-                "hardwareId",
-                "revision",
-                "deleted",
-                "updatedAt"
-              ]
-            }
-          }
-        },
-        "required": [
-          "ok",
-          "requestId",
-          "devices"
-        ]
-      },
-      "ImportResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
-          "recording": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/Recording"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string"
-                  },
-                  "revision": {
-                    "type": "integer",
-                    "minimum": 0
+                    "minimum": 0,
+                    "maximum": 9007199254740991
                   }
                 },
                 "required": [
@@ -3944,21 +1394,12 @@
           }
         },
         "required": [
-          "ok",
-          "requestId",
-          "recording",
-          "replayed"
+          "recording"
         ]
       },
-      "RecordingsResponse": {
+      "RecordingList": {
         "type": "object",
         "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
           "recordings": {
             "type": "array",
             "items": {
@@ -3977,420 +1418,320 @@
           }
         },
         "required": [
-          "ok",
-          "requestId",
           "recordings",
           "nextCursor"
         ]
       },
-      "DeleteRecordingResponse": {
+      "Device": {
         "type": "object",
         "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
-          "deleted": {
-            "const": true
-          },
           "id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "ok",
-          "requestId",
-          "deleted",
-          "id"
-        ]
-      },
-      "AssetResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
-          "revision": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "required": [
-          "ok",
-          "requestId",
-          "revision"
-        ]
-      },
-      "MappingsResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
-          "revisions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InputRevision"
-            }
-          }
-        },
-        "required": [
-          "ok",
-          "requestId",
-          "revisions"
-        ]
-      },
-      "EventsResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
-          "events": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "type": {
-                  "enum": [
-                    "recording.created",
-                    "recording.updated",
-                    "recording.transcript_ready",
-                    "recording.deleted"
-                  ]
-                },
-                "recordingId": {
-                  "type": "string"
-                },
-                "revision": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "createdAt": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "required": [
-                "id",
-                "type",
-                "recordingId",
-                "revision",
-                "createdAt"
-              ]
-            }
-          },
-          "cursor": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "hasMore": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "ok",
-          "requestId",
-          "events",
-          "cursor",
-          "hasMore"
-        ]
-      },
-      "TokensResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
-          "tokens": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
-                },
-                "applicationId": {
-                  "type": "string"
-                },
-                "scopes": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "expiresAt": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "createdAt": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "revokedAt": {
-                  "anyOf": [
-                    {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "lastUsedAt": {
-                  "anyOf": [
-                    {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
-              },
-              "required": [
-                "id",
-                "name",
-                "applicationId",
-                "scopes",
-                "expiresAt",
-                "createdAt",
-                "revokedAt",
-                "lastUsedAt"
-              ]
-            }
-          }
-        },
-        "required": [
-          "ok",
-          "requestId",
-          "tokens"
-        ]
-      },
-      "CreateTokenResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "token": {
-            "type": "string"
-          },
-          "applicationId": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 80
+          },
+          "model": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "model"
+        ],
+        "additionalProperties": false
+      },
+      "DeviceList": {
+        "type": "object",
+        "properties": {
+          "devices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Device"
+            }
+          }
+        },
+        "required": [
+          "devices"
+        ]
+      },
+      "SettingsResult": {
+        "type": "object",
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/DeviceSettings"
+          }
+        },
+        "required": [
+          "settings"
+        ]
+      },
+      "Key": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 80
           },
           "scopes": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "recordings:create",
+                "recordings:read",
+                "recordings:write",
+                "recordings:delete",
+                "events:read",
+                "settings:read",
+                "settings:write"
+              ]
             }
+          },
+          "createdAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "expiresAt": {
             "type": "integer",
-            "minimum": 0
-          }
-        },
-        "required": [
-          "ok",
-          "requestId",
-          "id",
-          "token",
-          "applicationId",
-          "name",
-          "scopes",
-          "expiresAt"
-        ]
-      },
-      "RevokeTokenResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "const": true
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
-          "requestId": {
-            "type": "string"
-          },
-          "revoked": {
-            "const": true
-          }
-        },
-        "required": [
-          "ok",
-          "requestId",
-          "revoked"
-        ]
-      },
-      "WebhooksResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
-          "webhooks": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "url": {
-                  "type": "string"
-                },
-                "events": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "createdAt": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "disabledAt": {
-                  "anyOf": [
-                    {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
+          "revokedAt": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
               },
-              "required": [
-                "id",
-                "url",
-                "events",
-                "createdAt",
-                "disabledAt"
-              ]
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastUsedAt": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "KeyList": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Key"
             }
           }
         },
         "required": [
-          "ok",
-          "requestId",
-          "webhooks"
+          "keys"
         ]
       },
-      "CreateWebhookResponse": {
+      "KeyResult": {
         "type": "object",
         "properties": {
-          "ok": {
-            "const": true
-          },
-          "requestId": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "url": {
-            "type": "string"
-          },
-          "events": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "key": {
+            "$ref": "#/components/schemas/Key"
           },
           "secret": {
             "type": "string"
           }
         },
         "required": [
-          "ok",
-          "requestId",
-          "id",
-          "url",
-          "events",
+          "key",
           "secret"
         ]
       },
-      "DisableWebhookResponse": {
+      "Webhook": {
         "type": "object",
         "properties": {
-          "ok": {
-            "const": true
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
           },
-          "requestId": {
-            "type": "string"
+          "url": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 2048
           },
-          "disabled": {
-            "const": true
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "WebhookList": {
+        "type": "object",
+        "properties": {
+          "webhooks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Webhook"
+            }
           }
         },
         "required": [
-          "ok",
-          "requestId",
-          "disabled"
+          "webhooks"
         ]
+      },
+      "WebhookResult": {
+        "type": "object",
+        "properties": {
+          "webhook": {
+            "$ref": "#/components/schemas/Webhook"
+          },
+          "secret": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "webhook",
+          "secret"
+        ]
+      },
+      "Event": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "recording.created",
+              "recording.updated",
+              "recording.deleted"
+            ]
+          },
+          "recordingId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "createdAt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "recordingId",
+          "revision",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "EventList": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            }
+          },
+          "nextCursor": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "events",
+          "nextCursor"
+        ]
+      },
+      "Deleted": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+          },
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "deleted"
+        ],
+        "additionalProperties": false
       },
       "Error": {
         "type": "object",
         "properties": {
-          "ok": {
-            "const": false
-          },
-          "requestId": {
-            "type": "string"
-          },
           "error": {
             "type": "object",
             "properties": {
               "code": {
-                "type": "string"
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 100
               },
               "message": {
-                "type": "string"
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 1000
               }
             },
             "required": [
               "code",
               "message"
-            ]
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
-          "ok",
-          "requestId",
           "error"
         ]
       }

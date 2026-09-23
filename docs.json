@@ -21,6 +21,13 @@
               "guides/device-inputs",
               "guides/webhooks"
             ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "guides/mcp",
+              "compatibility/v1"
+            ]
           }
         ]
       },
@@ -46,5 +53,79 @@
       "light": "#faf6f2",
       "dark": "#111111"
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/api-reference/devices/list-account-devices-without-pairing-credentials",
+      "destination": "/api-reference/devices/list-devices"
+    },
+    {
+      "source": "/api-reference/recordings/search-and-list-recordings",
+      "destination": "/api-reference/recordings/list-recordings"
+    },
+    {
+      "source": "/api-reference/recordings/import-a-recording",
+      "destination": "/api-reference/recordings/create-a-recording"
+    },
+    {
+      "source": "/api-reference/recordings/get-the-latest-clip-including-pending-captures",
+      "destination": "/guides/recordings"
+    },
+    {
+      "source": "/api-reference/recordings/get-a-recording-with-processing-and-local-audio-metadata",
+      "destination": "/api-reference/recordings/get-a-recording"
+    },
+    {
+      "source": "/api-reference/recordings/update-recording-text-with-an-if-match-revision",
+      "destination": "/api-reference/recordings/edit-a-recording"
+    },
+    {
+      "source": "/api-reference/recordings/delete-a-recording-with-an-if-match-revision",
+      "destination": "/api-reference/recordings/delete-a-recording"
+    },
+    {
+      "source": "/api-reference/recordings/report-client-processing-state",
+      "destination": "/compatibility/v1"
+    },
+    {
+      "source": "/api-reference/recordings/report-a-local-audio-reference",
+      "destination": "/compatibility/v1"
+    },
+    {
+      "source": "/api-reference/input-mappings/read-app-input-mapping-history",
+      "destination": "/guides/device-inputs"
+    },
+    {
+      "source": "/api-reference/input-mappings/merge-immutable-app-input-mapping-revisions",
+      "destination": "/guides/device-inputs"
+    },
+    {
+      "source": "/api-reference/events/read-recording-events-after-a-cursor",
+      "destination": "/api-reference/events/list-events"
+    },
+    {
+      "source": "/api-reference/tokens/list-integration-tokens-without-secrets",
+      "destination": "/api-reference/api-keys/list-api-keys"
+    },
+    {
+      "source": "/api-reference/tokens/create-a-scoped-token;-secret-returned-once",
+      "destination": "/api-reference/api-keys/create-an-api-key"
+    },
+    {
+      "source": "/api-reference/tokens/revoke-an-integration-token",
+      "destination": "/api-reference/api-keys/revoke-an-api-key"
+    },
+    {
+      "source": "/api-reference/webhooks/list-webhook-subscriptions",
+      "destination": "/api-reference/webhooks/list-webhooks"
+    },
+    {
+      "source": "/api-reference/webhooks/create-a-signed-webhook-subscription",
+      "destination": "/api-reference/webhooks/create-a-webhook"
+    },
+    {
+      "source": "/api-reference/webhooks/disable-a-webhook-and-cancel-pending-deliveries",
+      "destination": "/api-reference/webhooks/delete-a-webhook"
+    }
+  ]
 }

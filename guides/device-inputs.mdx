@@ -1,26 +1,48 @@
 ---
-title: Device input mappings
-description: App-owned recording types shared across the account.
+title: Device settings
+description: Choose whether a device input creates a clip or a recording.
 ---
 
-The app maps each supported input on a physical device to `clip` or `memo`.
-Firmware supplies capture events and audio. It does not own the product category.
-Sudo, Glyph, Dex, and phone recording paths keep using the shared classification
-and recording pipeline.
+The app decides what a recording becomes. Firmware reports the input and supplies
+audio. The same rule applies to Sudo, Glyph, and Dex.
 
-`GET /input-mappings` returns immutable history. `POST /input-mappings` merges up
-to 200 revisions per request. Each revision includes a UUID `id`, an active
-account `deviceId` (listed by `GET /devices`), `input`, `kind`, and `effectiveAt` in Unix milliseconds.
-Supported input identifiers are `hold`, `doubleTap`, `tripleTap`, `recordButton`,
-`pushToTalk`, and `appRecord`; clients expose the inputs their adapter can identify.
+`GET /devices` returns your account's devices with `id`, `name`, and `model`.
+Sudo uses the existing model identifier `ring`. Use the returned device ID with
+`GET /devices/{id}/settings`:
 
-Mappings use account device IDs from the existing device registry, not local BLE
-identifiers. Account clients merge history instead of replacing it. Resolve the
-latest revision at or before capture time, breaking equal-time ties by UUID.
-An offline phone applies downloaded settings after reconnecting and syncing.
-A capture's saved classification always wins over later mapping changes.
+```json
+{
+  "settings": {
+    "inputs": {
+      "hold": "clip",
+      "recordButton": "recording",
+      "appRecord": "recording"
+    }
+  }
+}
+```
 
-Defaults are Clip for hold/push-to-talk and Memo for record-button/app captures.
-Where a device exposes a shared latched-recording input, the app presents its
-shared mapping rather than guessing which gesture created an offline file.
-A mapping never authorizes pairing, remote capture, device erase, or audio access.
+Only the inputs supported by that device are returned. Each value is `clip` or
+`recording`. `recordButton` is the device's identifiable latched recording input;
+when offline files share that input, their gestures share this setting.
+`appRecord` means recording started from the app.
+
+To change a choice, copy the GET response's `ETag` into `If-Match` and send the
+changed inputs to `PATCH /devices/{id}/settings`:
+
+```http
+PATCH /api/v2/devices/device-id/settings
+If-Match: "etag-from-get"
+Content-Type: application/json
+
+{"inputs":{"recordButton":"clip"}}
+```
+
+Hold defaults to clip. Record-button and app-started inputs default to recording.
+The current adapters expose hold on Sudo and record-button/app inputs on Sudo,
+Glyph, and Dex. Choose only the inputs returned for your device.
+
+Settings sync across the account. Offline phones pick them up when they sync.
+Changes apply to future captures; existing recordings keep their type.
+A `412` response means the settings changed: read them again before editing.
+These settings do not pair devices, start remote recording, or access audio.

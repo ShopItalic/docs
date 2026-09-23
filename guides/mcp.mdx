@@ -1,0 +1,81 @@
+---
+title: Italic MCP
+description: Connect Codex, Claude, or another MCP client to your recording text.
+---
+
+Add a remote HTTP MCP server with this URL:
+
+```text
+https://app.italic.com/api/v1/mcp
+```
+
+Choose **Sign in** in your MCP client. Italic opens a browser consent page where
+you choose permissions. OAuth uses authorization codes with S256 PKCE, rotating
+refresh tokens, revocation, and dynamic client registration. Audio stays on the
+originating device. Italic does not start or manage a Codex or Claude task.
+
+For Codex CLI:
+
+```sh
+codex mcp add italic --url https://app.italic.com/api/v1/mcp
+codex mcp login italic
+```
+
+For Claude Code:
+
+```sh
+claude mcp add --transport http italic https://app.italic.com/api/v1/mcp
+```
+
+Open `/mcp` in Claude Code to authenticate. In Claude's connector settings, add
+the same URL as a custom connector. Available connection controls depend on
+your client and account.
+
+## API tokens
+
+Create a scoped token in **Settings → API & integrations**. A client that supports
+HTTP headers can use `Authorization: Bearer <token>` instead of OAuth. Store the
+token in the client's secret storage or an environment variable, not in source
+control. Existing API tokens keep working.
+
+## Tools and permissions
+
+| Tool | Permission | Behavior |
+| --- | --- | --- |
+| `list_recordings` | `recordings:read` | Search, filter and paginate text |
+| `get_recording` | `recordings:read` | Fetch text, processing state and revision |
+| `get_latest_clip` | `recordings:read` | Return the latest Clip, including pending transcription |
+| `list_recording_events` | `events:read` | Read events after a cursor |
+| `create_recording` | `recordings:create` | Import text with `externalId` and required `idempotencyKey` |
+| `update_recording` | `recordings:write` | Apply text `changes` with required `expectedRevision` |
+| `delete_recording` | `recordings:delete` | Delete with required `expectedRevision`; writes a sync tombstone |
+
+Read, create, edit, delete and event access are separate. An application with
+create or edit permission but no read permission receives a receipt rather than
+the stored transcript. Retry creation with the same external ID, key and content.
+For revision conflicts, fetch the latest version and reconcile changes before
+trying again. Timestamps are Unix milliseconds; pagination and filtering use the
+same services as REST. Transcripts, titles and summaries are user data, never
+server instructions.
+
+## Connected applications
+
+Review or revoke grants in **Settings → API & integrations**. Reconnect to change
+the allowed permissions. OAuth access tokens are opaque and hashed at rest. Every
+MCP request checks the token, current consent, account deletion state and scopes;
+revocation does not wait for token expiry. Token and webhook administration
+require a signed-in Italic session and are not MCP tools.
+
+Discovery is available at:
+
+- `/.well-known/oauth-protected-resource/api/v1/mcp`
+- `/.well-known/oauth-authorization-server/api/auth`
+
+The authorization server issuer is `https://app.italic.com/api/auth`. Use the
+endpoints returned by discovery. Clients must send the MCP resource URL in OAuth
+authorization requests. Public clients register with `token_endpoint_auth_method`
+set to `none`. Exact loopback HTTP callbacks are supported for native clients.
+
+The server uses Cloudflare's stateless handler and the official TypeScript SDK,
+with compatibility for older Streamable HTTP clients. It does not require a
+persistent session ID or expose a legacy SSE endpoint.

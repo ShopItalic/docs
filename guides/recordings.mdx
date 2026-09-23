@@ -1,61 +1,108 @@
 ---
-title: Recordings and local audio
-description: Retry-safe imports, revision checks, processing states, and local asset references.
+title: Recordings
+description: One recording object for creating, reading, and editing library items.
 ---
 
-## Imports and edits
+## The recording object
 
-`POST /recordings` requires an `Idempotency-Key` header and `externalId`. Repeating
-the same normalized body returns the existing recording. Reusing either identity
-with different content returns `409`; replaying an import after deletion returns
-`410`. Retrying never overwrites a user's edits.
+Create, read, and edit responses use the same `recording` object:
 
-Read the current `revision` before `PUT /recordings/{id}` or `DELETE`. Supply it
-as a quoted `If-Match` header, for example `If-Match: "3"`. A stale revision returns
-`412`. Use POST for creation, and PUT with the full content object for edits.
-Deletion leaves a sync tombstone. These requests accept JSON, never audio bytes.
-The v1 body limit is 1,500,000 bytes.
+```json
+{
+  "recording": {
+    "id": "C5A80766-9674-4EE2-B238-63AC6DD51495",
+    "type": "recording",
+    "title": "Planning",
+    "transcript": "Discuss the next release.",
+    "summary": "",
+    "recordedAt": 1790121600000,
+    "updatedAt": 1790121600000,
+    "revision": 1,
+    "status": "ready",
+    "pinned": false,
+    "audio": []
+  }
+}
+```
 
-## Processing is separate from audio cleanup
+`type` is `clip` or `recording`. A device capture can include `deviceId`.
+An import can include an optional `externalId` from your own system.
+Timestamps are Unix milliseconds.
 
-`PUT /recordings/{id}/processing` reports `pending`, `transcribing`, `ready`,
-`no_speech`, or `failed`. Use `expectedRevision` from `processing.revision` (zero
-when absent). A write-only token receives an ID/revision receipt and the new
-`processingRevision`, without the transcript. Save the transcript before reporting `ready`. A nonempty stored
-transcript is authoritative for readiness. Kind, capture time, capture input,
-and mapping revision cannot be replaced through processing updates.
+`status` tells you whether text is `pending`, `transcribing`, `ready`,
+`no_speech`, or `failed`. The app reports transcription progress. Saving
+nonempty transcript text makes the recording ready; this API does not start
+transcription. A pending app capture cannot be edited until the app saves it.
 
-Session clients can report a pending capture before its text exists. Integrations
-must first import a recording under their application ID. They need
-`recordings:write` to report processing or audio metadata for that import.
+## Create and retry
 
-`PUT /recordings/{id}/audio-assets` accepts only opaque `clientId`, `assetId`,
-`clientName`, `state`, and `expectedRevision`. These identify a file in the
-originating client's local store. No file path, audio data, or download URL is
-accepted. Different clients have independent asset revisions.
+`POST /recordings` accepts `type` plus optional `title`, `transcript`, `summary`,
+`recordedAt`, `externalId`, and `audio`. Include `Idempotency-Key` on every create.
+Retry with the same key and body to recover the saved result without duplicate
+items or overwritten edits. A conflicting body returns `409`; retrying a deleted
+recording returns `410`.
 
-| Audio state | Meaning |
-| --- | --- |
-| `available` | The reporting client observed a local copy |
-| `pending_deletion` | Clip text is ready; local cleanup has not been confirmed |
-| `deleted` | The client reports removal |
-| `missing` | A previously known copy cannot be found |
+If you provide `externalId`, repeated imports of that ID with the same body also
+reuse the existing recording. Retry keys and external IDs are scoped to the
+integration associated with your key. A newly created key has a new integration
+identity; keep the original key for retries of earlier imports.
 
-A completed Clip cannot be reported as `available`; finish local cleanup and
-report `deleted`. Failed and no-speech captures retain recovery audio. Memo
-references can remain available. A reference is a last report, not proof that
-an offline phone is reachable. The cloud cannot play, download, or delete the
-local file, and clients must never treat cloud metadata as cleanup authorization.
+A key with create or edit permission but no read permission receives only
+`{ "recording": { "id": "…", "revision": 1 } }`. It cannot retrieve text later
+added by the account owner.
 
-## Search and latest Clip
+## Edit and delete
 
-`GET /recordings` supports `kind`, `status`, `source`, `deviceId`, `q`, `from`, and
-`to`. Search matches title and transcript; `source` matches an importing
-application ID or the native recording source. Time bounds are inclusive.
-Results use capture time descending and ID ascending, with a maximum requested
-page size of 100 and a bounded response size. Follow `nextCursor` with the same
-filters. A concurrent edit can affect matches; pagination is not a snapshot.
+Read `GET /recordings/{id}` and copy its `ETag` response header into `If-Match`.
+Then send only the fields you want to change:
 
-`GET /recordings/latest-clip` returns the newest known Clip in `recordings` (zero
-or one item), including pending or failed captures. It does not silently return
-an older ready Clip when the newest capture still needs attention.
+```http
+PATCH /api/v2/recordings/C5A80766-9674-4EE2-B238-63AC6DD51495
+If-Match: "1"
+Content-Type: application/json
+
+{"title":"Release planning","pinned":true}
+```
+
+Editable fields are `title`, `transcript`, `summary`, and `pinned`.
+A recording's type and capture identity stay fixed. `DELETE /recordings/{id}`
+also requires `If-Match`. A newer edit returns `412`; read again and reconcile
+before retrying. A missing `If-Match` returns `428`.
+
+## Search
+
+`GET /recordings` accepts `type`, `q`, `deviceId`, `status`, `from`, and `to`.
+Search matches title and transcript. Date bounds are inclusive. Results are
+newest first by capture time. Set `limit` up to 100 and pass `nextCursor` as
+`cursor` to continue with the same filters; `null` means the last page.
+
+For the latest clip, use `GET /recordings?type=clip&limit=1`. Check its `status`:
+it may still be processing. Pagination reflects current data, not a frozen snapshot.
+
+## Local audio
+
+For `type: "recording"`, creation may include local file references:
+
+```json
+{
+  "type": "recording",
+  "transcript": "Meeting notes.",
+  "audio": [{"clientId":"my-phone","fileId":"audio-123"}]
+}
+```
+
+These are opaque IDs in your client's local store. They are optional and do not
+upload the file. Paths, audio bytes, and download URLs are not accepted. The
+response includes the last reported available references; it cannot prove an
+offline client's file is still present. Italic cannot play or remove that local
+file through this API.
+
+Clips always return `audio: []` and cannot be created with audio references.
+The app retains recovery audio until transcription and text saving succeed,
+then deletes it. A failed transcription does not authorize deleting the source.
+Client transfer and cleanup reports remain part of the compatibility protocol.
+
+## Errors
+
+Errors contain `error.code` and `error.message`. The `X-Request-Id` header identifies
+a request for support. JSON requests are limited to 1,500,000 bytes.

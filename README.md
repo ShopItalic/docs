@@ -16,7 +16,7 @@ logos, the curved-S favicon, and the site colors.
 ## Keeping the reference current
 
 `openapi.json` is the contract served by the production API at
-https://app.italic.com/api/v1/openapi.json. The **Sync live API reference** workflow
+https://app.italic.com/api/v2/openapi.json. The **Sync live API reference** workflow
 checks it hourly and can also be run manually after an API deployment. It validates
 the response and commits only when the contract changes, triggering Mintlify.
 Failed requests or invalid responses leave the published reference intact.

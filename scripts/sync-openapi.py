@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 from urllib.request import Request, urlopen
 
-SOURCE = "https://app.italic.com/api/v1/openapi.json"
+SOURCE = "https://app.italic.com/api/v2/openapi.json"
 ROOT = Path(__file__).resolve().parent.parent
 MAX_BYTES = 2_000_000
 
@@ -17,7 +17,7 @@ def validate(document):
     if document.get("info", {}).get("title") != "Italic API":
         raise ValueError("Unexpected API title")
     servers = document.get("servers", [])
-    if not any(server.get("url") == "https://app.italic.com/api/v1" for server in servers):
+    if not any(server.get("url") == "https://app.italic.com/api/v2" for server in servers):
         raise ValueError("Expected the production Italic API server")
     paths = document.get("paths", {})
     if not isinstance(paths, dict) or "/recordings" not in paths:

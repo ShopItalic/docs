@@ -1,47 +1,72 @@
 ---
-title: Events and webhooks
-description: Durable notifications with signed payloads and replayable event cursors.
+title: Webhooks
+description: Receive a notification when a recording is created, edited, or deleted.
 ---
 
-The event feed covers writes from current and compatibility clients:
-`recording.created`, `recording.updated`, `recording.transcript_ready`, and
-`recording.deleted`. Created means the recording text resource was inserted;
-metadata-only pending captures do not emit a created event. Transcript-ready
-also fires when nonempty transcript text changes.
+Create a webhook in Settings or through `POST /webhooks` using a signed-in
+account session. Choose a public HTTPS URL and the events you need:
 
-`GET /events?after=0&limit=100` returns account-scoped events, `cursor`, and
-`hasMore`. Persist the returned cursor after processing the page. IDs are
-monotonic but can have gaps. The feed currently remains until account deletion.
+```json
+{
+  "url": "https://your-receiver.com/italic",
+  "events": ["recording.created", "recording.updated", "recording.deleted"]
+}
+```
 
-Create subscriptions in web Settings. A public HTTPS endpoint on port 443 is
-required. Private/local addresses, credentials in the URL, and redirects are
-rejected. An account can have ten active subscriptions. The signing secret is
-shown once; retain it securely before dismissing it.
+Creation returns the webhook and a one-time signing `secret`. Store the secret
+before dismissing it. `GET /webhooks` lists active event subscriptions;
+`DELETE /webhooks/{id}` disables a subscription. Accounts can have ten active
+subscriptions. API keys cannot manage destinations.
 
-## Verify before processing
+## Notifications
 
-Payloads contain `id`, `type`, `recordingId`, `revision`, and `createdAt`. They
-contain no transcript, audio, or account bearer token. Fetch current content
-using a separately authorized read token when needed.
+```json
+{
+  "id": "123",
+  "type": "recording.created",
+  "recordingId": "C5A80766-9674-4EE2-B238-63AC6DD51495",
+  "revision": 1,
+  "createdAt": 1790121600000
+}
+```
 
-The `Italic-Signature` header is `t=<unix-seconds>,v1=<hex-hmac>`. Compute
-HMAC-SHA256 with the webhook secret over the exact UTF-8 bytes of
-`timestamp + "." + rawRequestBody`. Compare the digest in constant time and
-reject timestamps more than five minutes from your server clock. Do not parse
-and reserialize the body before verification. Deduplicate by event `id`.
+Notifications contain an ID and change details. Fetch the current recording
+with a key that has `recordings:read`. They contain no transcript or audio.
+Created means the recording text item was saved; a pending local capture alone
+does not emit it. Notifications include changes made by existing app clients.
 
-## Delivery behavior
+Verify the `Italic-Signature` header before processing. It has the form
+`t=<unix-seconds>,v1=<hex-hmac>`. Compute HMAC-SHA256 with your webhook secret over
+`timestamp + "." + rawRequestBody`, compare in constant time, and reject timestamps
+more than five minutes from your clock. Use the original bytes, not reserialized JSON.
 
-Delivery is at least once and may arrive out of order. A scheduled worker claims
-up to 20 deliveries per minute, with four concurrent requests and a five-second
-HTTP timeout. Any 2xx response acknowledges the event. Other statuses and network
-failures retry up to eight attempts with exponential backoff starting at one
-minute. Deliveries are persisted before sending; process crashes can produce a
-repeat. Exhausted deliveries remain recorded for diagnosis. Use the event feed
-to catch up independently of webhooks.
+```js
+import {createHmac, timingSafeEqual} from 'node:crypto';
 
-Disabling a subscription cancels queued deliveries; an already dispatched request
-may still arrive. Recreate subscriptions after rotating the backend signing
-master (`BETTER_AUTH_SECRET`), because derived subscription secrets also change.
-Never rotate that authentication secret solely to rotate one webhook: disable
-and recreate the individual subscription instead.
+export function verify(rawBody, signature, secret) {
+  const match = /^t=(\d+),v1=([a-f0-9]{64})$/.exec(signature ?? '');
+  if (!match || Math.abs(Date.now() / 1000 - Number(match[1])) > 300) return false;
+  const expected = createHmac('sha256', secret)
+    .update(match[1] + '.').update(rawBody).digest();
+  return timingSafeEqual(expected, Buffer.from(match[2], 'hex'));
+}
+```
+
+Acknowledge with a 2xx response. Failures retry up to eight attempts. Delivery can
+repeat or arrive out of order, so deduplicate by event ID and avoid assuming order.
+Disabling a subscription cancels queued sends; an in-flight request may finish.
+To rotate one secret, disable that subscription and create a replacement.
+
+## Catch up with events
+
+If you need polling or recovery, use `GET /events?limit=100`. It returns `events`
+and `nextCursor`. After processing a page, save `nextCursor` and supply it as
+`cursor` on the next request. An empty page means you are caught up. Cursors have
+gaps and should be treated as opaque values. Events remain until account deletion.
+
+## Sending recording text
+
+The app also supports text delivery, capture rules, and manual sends. Those
+existing features use the [compatibility webhook interface](/compatibility/webhooks).
+They are separate from the simple event subscriptions described here and do not
+appear in the v2 webhook list when configured in text mode.

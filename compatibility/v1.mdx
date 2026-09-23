@@ -1,0 +1,29 @@
+---
+title: Existing integrations
+description: Move new integrations to v2 while current apps keep working.
+---
+
+The public API uses `https://app.italic.com/api/v2`. Existing `/api/v1` endpoints,
+API keys, MCP connections, webhooks, and app synchronization continue working.
+There is no recording-data migration for this version.
+
+| v1 | v2 |
+| --- | --- |
+| `content.kind: "memo"` | `type: "recording"` |
+| `content.kind: "clip"` | `type: "clip"` |
+| `content.title`, `content.transcript`, `content.summary` | `title`, `transcript`, `summary` |
+| `content.isPinned` | `pinned` |
+| Full-content PUT | Partial-field PATCH |
+| Required `externalId` and `recordedAt` | Optional; retry key still required |
+| Input mapping revision history | Current device settings |
+| Token creation with caller-selected application ID | API key creation with automatic identity |
+| Processing and audio cleanup reports | Kept in the existing app protocol |
+
+Existing callers should continue retrying original imports through the API
+version that created them. Do not replay the same import through both versions.
+Use v2 for new imports and for reading or editing existing recordings.
+
+[The v1 OpenAPI document](https://app.italic.com/api/v1/openapi.json) remains
+available for existing integrations. Local transfer verification, audio cleanup,
+and processing reports are unchanged. See [text delivery and capture rules](/compatibility/webhooks)
+for the existing webhook extension, and [MCP](/guides/mcp) for assistant connections.
