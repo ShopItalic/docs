@@ -21,13 +21,6 @@
               "guides/device-inputs",
               "guides/webhooks"
             ]
-          },
-          {
-            "group": "Integrations",
-            "pages": [
-              "guides/mcp",
-              "compatibility/v1"
-            ]
           }
         ]
       },
