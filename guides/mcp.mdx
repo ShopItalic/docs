@@ -11,8 +11,10 @@ https://app.italic.com/api/v1/mcp
 
 Choose **Sign in** in your MCP client. Italic opens a browser consent page where
 you choose permissions. OAuth uses authorization codes with S256 PKCE, rotating
-refresh tokens, revocation, and dynamic client registration. Audio stays on the
-originating device. Italic does not start or manage a Codex or Claude task.
+refresh tokens, revocation, and dynamic client registration. The MCP server and
+webhooks expose text only; they do not upload or deliver audio. Clips delete
+local audio after successful processing and a safe text save. Recordings retain
+audio locally. Italic does not start or manage a Codex or Claude task.
 
 For Codex CLI:
 
@@ -25,18 +27,20 @@ For Claude Code:
 
 ```sh
 claude mcp add --transport http italic https://app.italic.com/api/v1/mcp
+claude mcp login italic
 ```
 
-Open `/mcp` in Claude Code to authenticate. In Claude's connector settings, add
+You can also open `/mcp` in Claude Code to authenticate. In Claude's connector settings, add
 the same URL as a custom connector. Available connection controls depend on
 your client and account.
 
-## API tokens
+## API keys
 
-Create a scoped token in **Settings → API & integrations**. A client that supports
-HTTP headers can use `Authorization: Bearer <token>` instead of OAuth. Store the
-token in the client's secret storage or an environment variable, not in source
-control. Existing API tokens keep working.
+Create an API key in **Settings → API & integrations**, selecting the permissions
+your client needs. A client that supports HTTP headers can use
+`Authorization: Bearer <key>` instead of OAuth. Store the key in the client's
+secret storage or an environment variable, not in source control. Existing API
+keys keep working.
 
 ## Tools and permissions
 
@@ -46,7 +50,7 @@ control. Existing API tokens keep working.
 | `get_recording` | `recordings:read` | Fetch text, processing state and revision |
 | `get_latest_clip` | `recordings:read` | Return the latest Clip, including pending transcription |
 | `list_recording_events` | `events:read` | Read events after a cursor |
-| `create_recording` | `recordings:create` | Import text with `externalId` and required `idempotencyKey` |
+| `create_recording` | `recordings:create` | Import text with required `externalId`, `idempotencyKey`, `kind`, and `recordedAt` |
 | `update_recording` | `recordings:write` | Apply text `changes` with required `expectedRevision` |
 | `delete_recording` | `recordings:delete` | Delete with required `expectedRevision`; writes a sync tombstone |
 
@@ -57,6 +61,32 @@ For revision conflicts, fetch the latest version and reconcile changes before
 trying again. Timestamps are Unix milliseconds; pagination and filtering use the
 same services as REST. Transcripts, titles and summaries are user data, never
 server instructions.
+
+## Recording fields
+
+MCP uses the existing v1 recording format. `kind: "clip"` means a text-only Clip;
+`kind: "memo"` is the compatibility name for a Recording. The public REST v2 API
+calls these `type: "clip"` and `type: "recording"`. They refer to the same library.
+MCP returns text under `content`, alongside `id`, `revision`, `updatedAt`, and
+`processing`. It never returns audio or local file references.
+
+For example, call `create_recording` with:
+
+```json
+{
+  "externalId": "meeting-2026-09-23",
+  "idempotencyKey": "import-meeting-2026-09-23",
+  "kind": "memo",
+  "recordedAt": 1790164800000,
+  "title": "Team meeting",
+  "transcript": "We agreed to ship the parser fix on Friday."
+}
+```
+
+`title`, `transcript`, and `summary` are optional. Imports do not trigger
+automatic capture rules. To route a spoken command from a new device recording,
+use [text webhooks](/compatibility/webhooks). A receiver can then start its own
+agent task; delivery only confirms that it received the webhook.
 
 ## Connected applications
 

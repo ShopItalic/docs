@@ -1,9 +1,19 @@
 ---
-title: Events and webhooks
-description: Durable notifications with signed payloads and replayable event cursors.
+title: Text webhooks
+description: Send recording text to your integrations with capture rules or manual delivery.
 ---
 
-The event feed covers writes from current and compatibility clients:
+Configure text webhooks in **Settings → API & integrations**. Use a spoken prefix,
+capture input, or recording type to choose what gets sent, or send a recording
+manually from its detail screen. Webhooks do not upload or deliver audio. Clips
+delete local audio after successful processing and a safe text save; Recordings
+retain it locally.
+
+This guide describes the existing `/api/v1` interface. Use
+`https://app.italic.com/api/v1` as the base URL for relative endpoints below.
+For simple v2 change notifications, see [Webhooks](/guides/webhooks).
+
+The v1 event feed covers writes from current and compatibility clients:
 `recording.created`, `recording.updated`, `recording.transcript_ready`, and
 `recording.deleted`. Created means the recording text resource was inserted;
 metadata-only pending captures do not emit a created event. Transcript-ready
@@ -50,7 +60,8 @@ and recreate the individual subscription instead.
 ## Text payloads
 
 Choose **Recording text** in settings or create a subscription with
-`payloadMode: "text"`. Text deliveries include an immutable snapshot of the
+`POST /webhooks` and `payloadMode: "text"` using a signed-in account session.
+Text deliveries include an immutable snapshot of the
 selected revision. Retries retain the original body even if the recording was
 edited. Bodies exclude audio, coordinates, local files and credentials.
 
@@ -79,6 +90,8 @@ delivery text and cancels unstarted text deliveries. Previously delivered text
 is under the receiver's control.
 
 ## Capture rules
+
+`kind` uses the existing values `clip` and `memo`; `memo` means a Recording.
 
 ```json
 {

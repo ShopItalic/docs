@@ -26,6 +26,7 @@
             "group": "Integrations",
             "pages": [
               "guides/mcp",
+              "compatibility/webhooks",
               "compatibility/v1"
             ]
           }
@@ -48,6 +49,11 @@
     "dark": "/logo/italic-dark.svg"
   },
   "favicon": "/logo/italic-mark.svg",
+  "seo": {
+    "metatags": {
+      "canonical": "https://docs.italic.com"
+    }
+  },
   "background": {
     "color": {
       "light": "#faf6f2",

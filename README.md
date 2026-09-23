@@ -1,7 +1,7 @@
 # Italic API documentation
 
 The public documentation for the Italic recording API, hosted on Mintlify Starter:
-https://italic.mintlify.site
+https://docs.italic.com
 This repository contains documentation only. App source and account data remain
 in their own systems.
 
