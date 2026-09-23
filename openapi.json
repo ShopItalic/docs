@@ -43,7 +43,7 @@
               "type": "string",
               "enum": [
                 "clip",
-                "recording"
+                "memo"
               ]
             }
           },
@@ -1038,7 +1038,7 @@
             "type": "string",
             "enum": [
               "clip",
-              "recording"
+              "memo"
             ]
           },
           "title": {
@@ -1134,42 +1134,42 @@
                 "type": "string",
                 "enum": [
                   "clip",
-                  "recording"
+                  "memo"
                 ]
               },
               "doubleTap": {
                 "type": "string",
                 "enum": [
                   "clip",
-                  "recording"
+                  "memo"
                 ]
               },
               "tripleTap": {
                 "type": "string",
                 "enum": [
                   "clip",
-                  "recording"
+                  "memo"
                 ]
               },
               "recordButton": {
                 "type": "string",
                 "enum": [
                   "clip",
-                  "recording"
+                  "memo"
                 ]
               },
               "pushToTalk": {
                 "type": "string",
                 "enum": [
                   "clip",
-                  "recording"
+                  "memo"
                 ]
               },
               "appRecord": {
                 "type": "string",
                 "enum": [
                   "clip",
-                  "recording"
+                  "memo"
                 ]
               }
             },
@@ -1260,7 +1260,7 @@
             "type": "string",
             "enum": [
               "clip",
-              "recording"
+              "memo"
             ]
           },
           "title": {
