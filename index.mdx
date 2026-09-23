@@ -1,42 +1,43 @@
 ---
-title: Italic API
-description: One recording library across devices and integrations. Text syncs; audio stays local.
+title: Italic
+description: Create and work with recordings. Text syncs to Italic; audio stays local.
 ---
 
-The API uses the same account library as the iPhone and web apps. A recording has
-an explicit `kind`: `clip` or `memo`. Memos retain local playback audio; Clips keep
-recovery audio until transcription and text saving succeed, then remove it.
-Both sync their text to the cloud.
+A recording is one item in your Italic library. Its `type` is:
 
-Base URL: `https://app.italic.com/api/v1`.
+- **`clip`** — text only after transcription. The app deletes the audio once the text is safely saved.
+- **`recording`** — text with optional audio kept on the originating client.
 
-[Download the live OpenAPI schema](https://app.italic.com/api/v1/openapi.json)
-to generate a client or inspect the current API contract.
+The API reads and writes the same library as the app. It never stores audio.
 
-## Import your first recording
+Base URL: `https://app.italic.com/api/v2`.
 
-Create a scoped token in the web app under **Settings → Integrations**. Give an
-insertion-only integration `recordings:create`. Keep the token on your server.
+## Create your first recording
+
+Create an API key in **Settings → API & integrations**. Select
+`recordings:create` and `recordings:read` to follow this example.
 
 ```bash
-curl https://app.italic.com/api/v1/recordings \
-  -H "Authorization: Bearer $ITALIC_TOKEN" \
+curl https://app.italic.com/api/v2/recordings \
+  -H "Authorization: Bearer $ITALIC_API_KEY" \
   -H 'Content-Type: application/json' \
   -H 'Idempotency-Key: meeting-123' \
-  --data '{"externalId":"meeting-123","kind":"memo","recordedAt":1790121600000,"title":"Planning","transcript":"Discuss the next release."}'
+  --data '{"type":"recording","title":"Planning","transcript":"Discuss the next release."}'
 ```
 
-Use the same external ID and request body on retry. An insertion-only token gets
-an ID and revision receipt. Add `recordings:read` if the integration must retrieve
-library text. Importing does not upload audio.
+Only `type` is required in the body. Italic supplies an ID and timestamp.
+Reuse the same retry key and body if a request fails or its response is lost.
 
-## Existing clients
+Read a recording with `GET /recordings/{id}`, edit selected fields with
+`PATCH /recordings/{id}`, or search the library with `GET /recordings`.
 
-`/api/recordings`, the legacy `/api/memos` alias, and `/api/sync` continue to use the
-same `recordings` table. They are session-only compatibility endpoints. v1 tokens
-work only under `/api/v1`. Device adapters retain their transfer and custody
-checks; classification and input preferences belong to the app.
+## Next steps
 
-All timestamps are Unix milliseconds except webhook signature timestamps, which
-are Unix seconds. Success responses include `ok: true` and `requestId`; errors
-include `ok: false`, `error.code`, `error.message`, and `requestId`.
+- [Recordings](/guides/recordings): the object, editing, search, and optional local audio references.
+- [Device settings](/guides/device-inputs): choose what each recording input creates.
+- [Webhooks](/guides/webhooks): receive recording notifications.
+- [MCP](/guides/mcp): connect an assistant to your library.
+
+[Download the OpenAPI document](https://app.italic.com/api/v2/openapi.json) to
+generate a client. Existing app clients and v1 integrations continue working;
+see [compatibility](/compatibility/v1).

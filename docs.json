@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Italic API",
+  "name": "Italic",
   "colors": {
     "primary": "#17211d",
     "light": "#dedfcf",
@@ -20,6 +20,13 @@
               "guides/recordings",
               "guides/device-inputs",
               "guides/webhooks"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "guides/mcp",
+              "compatibility/v1"
             ]
           }
         ]
@@ -43,8 +50,8 @@
   "favicon": "/logo/italic-mark.svg",
   "background": {
     "color": {
-      "light": "#dedfcf",
-      "dark": "#17211d"
+      "light": "#faf6f2",
+      "dark": "#111111"
     }
   }
 }
