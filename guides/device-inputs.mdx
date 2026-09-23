@@ -1,0 +1,26 @@
+---
+title: Device input mappings
+description: App-owned recording types shared across the account.
+---
+
+The app maps each supported input on a physical device to `clip` or `memo`.
+Firmware supplies capture events and audio. It does not own the product category.
+Sudo, Glyph, Dex, and phone recording paths keep using the shared classification
+and recording pipeline.
+
+`GET /input-mappings` returns immutable history. `POST /input-mappings` merges up
+to 200 revisions per request. Each revision includes a UUID `id`, an active
+account `deviceId` (listed by `GET /devices`), `input`, `kind`, and `effectiveAt` in Unix milliseconds.
+Supported input identifiers are `hold`, `doubleTap`, `tripleTap`, `recordButton`,
+`pushToTalk`, and `appRecord`; clients expose the inputs their adapter can identify.
+
+Mappings use account device IDs from the existing device registry, not local BLE
+identifiers. Account clients merge history instead of replacing it. Resolve the
+latest revision at or before capture time, breaking equal-time ties by UUID.
+An offline phone applies downloaded settings after reconnecting and syncing.
+A capture's saved classification always wins over later mapping changes.
+
+Defaults are Clip for hold/push-to-talk and Memo for record-button/app captures.
+Where a device exposes a shared latched-recording input, the app presents its
+shared mapping rather than guessing which gesture created an offline file.
+A mapping never authorizes pairing, remote capture, device erase, or audio access.

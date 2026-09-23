@@ -1,0 +1,39 @@
+---
+title: Italic API
+description: One recording library across devices and integrations. Text syncs; audio stays local.
+---
+
+The API uses the same account library as the iPhone and web apps. A recording has
+an explicit `kind`: `clip` or `memo`. Memos retain local playback audio; Clips keep
+recovery audio until transcription and text saving succeed, then remove it.
+Both sync their text to the cloud.
+
+Base URL: `https://app.italic.com/api/v1`.
+
+## Import your first recording
+
+Create a scoped token in the web app under **Settings → Integrations**. Give an
+insertion-only integration `recordings:create`. Keep the token on your server.
+
+```bash
+curl https://app.italic.com/api/v1/recordings \
+  -H "Authorization: Bearer $ITALIC_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: meeting-123' \
+  --data '{"externalId":"meeting-123","kind":"memo","recordedAt":1790121600000,"title":"Planning","transcript":"Discuss the next release."}'
+```
+
+Use the same external ID and request body on retry. An insertion-only token gets
+an ID and revision receipt. Add `recordings:read` if the integration must retrieve
+library text. Importing does not upload audio.
+
+## Existing clients
+
+`/api/recordings`, the legacy `/api/memos` alias, and `/api/sync` continue to use the
+same `recordings` table. They are session-only compatibility endpoints. v1 tokens
+work only under `/api/v1`. Device adapters retain their transfer and custody
+checks; classification and input preferences belong to the app.
+
+All timestamps are Unix milliseconds except webhook signature timestamps, which
+are Unix seconds. Success responses include `ok: true` and `requestId`; errors
+include `ok: false`, `error.code`, `error.message`, and `requestId`.

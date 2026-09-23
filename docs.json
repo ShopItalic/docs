@@ -1,0 +1,13 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Italic API",
+  "colors": {"primary": "#1F6B50", "light": "#267D60", "dark": "#86D5B1"},
+  "navigation": {
+    "tabs": [
+      {"tab": "Guides", "groups": [{"group": "Start here", "pages": ["index", "guides/authentication", "guides/recordings", "guides/device-inputs", "guides/webhooks"]}]},
+      {"tab": "API reference", "openapi": "openapi.json"}
+    ]
+  },
+  "contextual": {"options": ["copy", "download-spec"]}
+}

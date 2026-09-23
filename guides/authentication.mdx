@@ -1,0 +1,30 @@
+---
+title: Authentication and permissions
+description: Account-scoped, expiring integration tokens with explicit permissions.
+---
+
+Use `Authorization: Bearer itk_…`. Tokens are displayed once, stored as hashes,
+and checked for expiration and revocation on every request. An account may have
+50 active tokens, each with a lifetime of 1–365 days. The limit is 120 requests
+per minute per token; honor `Retry-After` on a `429` response.
+
+| Scope | Access |
+| --- | --- |
+| `recordings:create` | Idempotent import |
+| `recordings:read` | Read, search, filter, latest Clip |
+| `recordings:write` | Edit text; report metadata for this application's imports |
+| `recordings:delete` | Delete a recording with an expected revision |
+| `events:read` | Read the account's event feed |
+| `settings:read` | Read account devices and input mapping revisions |
+| `settings:write` | Append input mapping revisions |
+
+Permissions apply to the account library. Choose only the scopes the integration
+needs. Token and webhook management require a signed-in Italic session and cannot
+be delegated to an integration token. Revocation takes effect on subsequent
+requests; an already accepted request may finish. Account deletion denies access
+and purges tokens, reference metadata, events, and webhook delivery records.
+
+`applicationId` identifies the integration, independently of token rotation.
+Keep it stable: import deduplication is scoped to account + application +
+`externalId`. Two tokens with the same application ID share that import namespace.
+Never place tokens in a URL, public repository, browser analytics, or client bundle.

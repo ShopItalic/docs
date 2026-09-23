@@ -1,0 +1,61 @@
+---
+title: Recordings and local audio
+description: Retry-safe imports, revision checks, processing states, and local asset references.
+---
+
+## Imports and edits
+
+`POST /recordings` requires an `Idempotency-Key` header and `externalId`. Repeating
+the same normalized body returns the existing recording. Reusing either identity
+with different content returns `409`; replaying an import after deletion returns
+`410`. Retrying never overwrites a user's edits.
+
+Read the current `revision` before `PUT /recordings/{id}` or `DELETE`. Supply it
+as a quoted `If-Match` header, for example `If-Match: "3"`. A stale revision returns
+`412`. Use POST for creation, and PUT with the full content object for edits.
+Deletion leaves a sync tombstone. These requests accept JSON, never audio bytes.
+The v1 body limit is 1,500,000 bytes.
+
+## Processing is separate from audio cleanup
+
+`PUT /recordings/{id}/processing` reports `pending`, `transcribing`, `ready`,
+`no_speech`, or `failed`. Use `expectedRevision` from `processing.revision` (zero
+when absent). A write-only token receives an ID/revision receipt and the new
+`processingRevision`, without the transcript. Save the transcript before reporting `ready`. A nonempty stored
+transcript is authoritative for readiness. Kind, capture time, capture input,
+and mapping revision cannot be replaced through processing updates.
+
+Session clients can report a pending capture before its text exists. Integrations
+must first import a recording under their application ID. They need
+`recordings:write` to report processing or audio metadata for that import.
+
+`PUT /recordings/{id}/audio-assets` accepts only opaque `clientId`, `assetId`,
+`clientName`, `state`, and `expectedRevision`. These identify a file in the
+originating client's local store. No file path, audio data, or download URL is
+accepted. Different clients have independent asset revisions.
+
+| Audio state | Meaning |
+| --- | --- |
+| `available` | The reporting client observed a local copy |
+| `pending_deletion` | Clip text is ready; local cleanup has not been confirmed |
+| `deleted` | The client reports removal |
+| `missing` | A previously known copy cannot be found |
+
+A completed Clip cannot be reported as `available`; finish local cleanup and
+report `deleted`. Failed and no-speech captures retain recovery audio. Memo
+references can remain available. A reference is a last report, not proof that
+an offline phone is reachable. The cloud cannot play, download, or delete the
+local file, and clients must never treat cloud metadata as cleanup authorization.
+
+## Search and latest Clip
+
+`GET /recordings` supports `kind`, `status`, `source`, `deviceId`, `q`, `from`, and
+`to`. Search matches title and transcript; `source` matches an importing
+application ID or the native recording source. Time bounds are inclusive.
+Results use capture time descending and ID ascending, with a maximum requested
+page size of 100 and a bounded response size. Follow `nextCursor` with the same
+filters. A concurrent edit can affect matches; pagination is not a snapshot.
+
+`GET /recordings/latest-clip` returns the newest known Clip in `recordings` (zero
+or one item), including pending or failed captures. It does not silently return
+an older ready Clip when the newest capture still needs attention.
