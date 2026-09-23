@@ -9,6 +9,10 @@ Mintlify configuration: repository `ShopItalic/docs`, branch `main`, documentati
 directory `/` (repository root). Git pushes automatically publish the site after
 the Mintlify GitHub App is installed for this repository.
 
+Brand colors and the wordmark come from the shared Italic design tokens and
+`ShopItalic/store/public/logos/italic.svg`. `docs.json` sets the light and dark
+logos, the curved-S favicon, and the site colors.
+
 ## Keeping the reference current
 
 `openapi.json` is the contract served by the production API at

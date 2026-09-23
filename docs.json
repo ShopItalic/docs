@@ -2,12 +2,49 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Italic API",
-  "colors": {"primary": "#1F6B50", "light": "#267D60", "dark": "#86D5B1"},
+  "colors": {
+    "primary": "#17211d",
+    "light": "#dedfcf",
+    "dark": "#607d65"
+  },
   "navigation": {
     "tabs": [
-      {"tab": "Guides", "groups": [{"group": "Start here", "pages": ["index", "guides/authentication", "guides/recordings", "guides/device-inputs", "guides/webhooks"]}]},
-      {"tab": "API reference", "openapi": "openapi.json"}
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Start here",
+            "pages": [
+              "index",
+              "guides/authentication",
+              "guides/recordings",
+              "guides/device-inputs",
+              "guides/webhooks"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API reference",
+        "openapi": "openapi.json"
+      }
     ]
   },
-  "contextual": {"options": ["copy", "download-spec"]}
+  "contextual": {
+    "options": [
+      "copy",
+      "download-spec"
+    ]
+  },
+  "logo": {
+    "light": "/logo/italic-light.svg",
+    "dark": "/logo/italic-dark.svg"
+  },
+  "favicon": "/logo/italic-mark.svg",
+  "background": {
+    "color": {
+      "light": "#dedfcf",
+      "dark": "#17211d"
+    }
+  }
 }
