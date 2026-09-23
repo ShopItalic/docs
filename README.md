@@ -25,6 +25,9 @@ release verification.
 
 Edit the MDX guides directly and push to `main` to publish them. Guide prose is
 maintained alongside API changes; it is not rewritten automatically.
+The free **Check documentation** GitHub workflow checks guide endpoint references,
+navigation pages, frontmatter, and brand assets on pull requests and pushes.
+Run `python3 scripts/check-docs.py` locally before publishing a guide change.
 
 ## Local development
 
