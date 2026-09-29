@@ -1201,11 +1201,14 @@
                 "recordings:delete",
                 "events:read",
                 "settings:read",
-                "settings:write"
+                "settings:write",
+                "workflows:read",
+                "workflows:write",
+                "actions:review"
               ]
             },
             "minItems": 1,
-            "maxItems": 7
+            "maxItems": 10
           },
           "expiresInDays": {
             "type": "integer",
@@ -1499,7 +1502,10 @@
                 "recordings:delete",
                 "events:read",
                 "settings:read",
-                "settings:write"
+                "settings:write",
+                "workflows:read",
+                "workflows:write",
+                "actions:review"
               ]
             }
           },
